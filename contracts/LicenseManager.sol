@@ -31,10 +31,8 @@ contract LicenseManager is ERC721Token, Ownable {
     * @return A boolean that indicates if the operation was successful.
     */
     function createLicense(uint256 _licenseId) onlyOwner public returns (bool) {
-        // Make sure this token has not already owned
-        require(ownerOf(_licenseId) == address(0));
         _mint(msg.sender, _licenseId);
-        licenseHolder[_licenseId] == msg.sender;
+        licenseHolder[_licenseId] = msg.sender;
         return true;
     }
 
@@ -60,7 +58,7 @@ contract LicenseManager is ERC721Token, Ownable {
     */
     function setLicenseRate(uint256 _licenseId, uint256 rate) public returns (bool) {
         // Sender is license owner
-        require(licenseHolder[_licenseId] == msg.sender);
+        require(ownerOf(_licenseId) == msg.sender);
         // Set the license rate
         dailyLicenseRate[_licenseId] = rate;
         return true;
@@ -118,8 +116,7 @@ contract LicenseManager is ERC721Token, Ownable {
     * @return time left in seconds
     */
     function getLicenseTimeLeft(uint256 _licenseId) public view returns (uint256) {
-        address holder = licenseHolder[_licenseId];
-        require(holder != address(0));
+        require(licenseHolder[_licenseId] != ownerOf(_licenseId));
         return (licReleaseTime[_licenseId] - now);
     }
 
@@ -131,7 +128,7 @@ contract LicenseManager is ERC721Token, Ownable {
     function isLicenseAvailable(uint256 _licenseId) public view returns (bool) {
         require(ownerOf(_licenseId) != address(0));
         require(ownerOf(_licenseId) == licenseHolder[_licenseId]);
-        return true;
+        return dailyLicenseRate[_licenseId] > 0;
     }
 
     /**

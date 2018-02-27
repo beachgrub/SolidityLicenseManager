@@ -26,7 +26,15 @@ By default, licenses are can not be licensed until the daily license rate is set
 A user can obtain a license by paying RATE*DURATION:
 
     obtainLicense(LICENSE_ID, DURATION)
-    
+
+Check if a user has a current valid license for an item:
+
+    hasLicense(USER_ADDRESS, LICENSE_ID)
+
+To check how long a license duration is for:
+
+    getLicenseTimeLeft(LICENSE_ID)
+
 This project and uses [truffle](https://github.com/trufflesuite/truffle) Ethereum smart contracts development framework. In order to run it, install truffle first:
 
     npm install -g truffle

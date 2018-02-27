@@ -1,5 +1,5 @@
-var LicensedToken = artifacts.require("LicensedToken");
+var LicenseManager = artifacts.require("LicenseManager");
 
 module.exports = function(deployer) {
-  deployer.deploy(LicensedToken);
+  deployer.deploy(LicenseManager);
 };
