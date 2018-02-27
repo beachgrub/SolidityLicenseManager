@@ -10,8 +10,6 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 contract LicenseManager is ERC721Token, Ownable {
     using SafeMath for uint256;
     string public name = 'LicenseManager';
-    // Cost to rent a license for a day in wei
-    uint256 public dailyLicenseCost;
 
     // Mapping from license ID to license holder
     // It will be the owner if not currently licensed
@@ -20,11 +18,11 @@ contract LicenseManager is ERC721Token, Ownable {
     // Mapping from license ID to release time if held by licensor
     mapping (uint256 => uint256) private licReleaseTime;
 
+    // Mapping from license ID to rental rate in wei (0 = not for rent)
+    mapping (uint256 => uint256) private dailyLicenseRate;
 
     // Constructor
     function LicenseManager() public {
-        // Initial cost in wei for a daily license
-        dailyLicenseCost = 1000;
     }
 
     /**
@@ -36,20 +34,36 @@ contract LicenseManager is ERC721Token, Ownable {
         // Make sure this token has not already owned
         require(ownerOf(_licenseId) == address(0));
         _mint(msg.sender, _licenseId);
+        licenseHolder[_licenseId] == msg.sender;
         return true;
     }
 
     /**
     * @dev Releases license held by licensor once the time has expired.
-    * @param _licenseId The id of license to mint.
+    * @param _licenseId The id of license to release.
+    * @return A boolean that indicates if the operation was successful.
     */
-    function releaseLicense(uint256 _licenseId) public {
+    function releaseLicense(uint256 _licenseId) public returns (bool) {
         // There is a license holder
         require(licenseHolder[_licenseId] != address(0));
+        // The time has expired
         require(now >= licReleaseTime[_licenseId]);
-
         // Clear out the license
-        licenseHolder[_licenseId] = address(0);
+        licenseHolder[_licenseId] = ownerOf(_licenseId);
+        return true;
+    }
+
+    /**
+    * @dev Set the rate for rental of the license in wei.
+    * @param _licenseId The id of license to rent.
+    * @return A boolean that indicates if the operation was successful.
+    */
+    function setLicenseRate(uint256 _licenseId, uint256 rate) public returns (bool) {
+        // Sender is license owner
+        require(licenseHolder[_licenseId] == msg.sender);
+        // Set the license rate
+        dailyLicenseRate[_licenseId] = rate;
+        return true;
     }
 
     /**
@@ -58,21 +72,23 @@ contract LicenseManager is ERC721Token, Ownable {
     * @param _daysOfLicense How many days you wish to hold it.
     * requires the transaction sends funds for number of days times the daily cost
     */
-    function obtainLicense(uint256 _licenseId, uint256 _daysOfLicense) public payable {
+    function obtainLicense(uint256 _licenseId, uint256 _daysOfLicense) public payable returns (bool) {
         // There is a license owner
         require(ownerOf(_licenseId) != address(0));
-        // The correct funds are sent
-        require(msg.value == _daysOfLicense * dailyLicenseCost);
+        require(dailyLicenseRate[_licenseId] > 0);
         // check if license can be released
         releaseLicense(_licenseId);
-        // make sure no one holds license already
-        require(licenseHolder[_licenseId] == address(0));
+        // make sure no one holds license already (owner holds)
+        require(licenseHolder[_licenseId] == ownerOf(_licenseId));
+        // The correct funds are sent
+        require(msg.value == _daysOfLicense * dailyLicenseRate[_licenseId]);
 
         // if the funds were sent to owner
         if (ownerOf(_licenseId).send(msg.value)) {
             // Grant the license
             licenseHolder[_licenseId] = msg.sender;
             licReleaseTime[_licenseId] = now + (_daysOfLicense * 1 days);
+            return true;
 		}
     }
 
@@ -83,14 +99,23 @@ contract LicenseManager is ERC721Token, Ownable {
     */
     function getLicenseHolder(uint256 _licenseId) public view returns (address) {
         address holder = licenseHolder[_licenseId];
-        require(holder != address(0));
         return holder;
+    }
+
+    /**
+    * @dev Gets the license daily rate
+    * @param _licenseId uint256 ID of the license to query the rate of
+    * @return daily rate in wei
+    */
+    function getLicenseRate(uint256 _licenseId) public view returns (uint256) {
+        require(ownerOf(_licenseId) != address(0));
+        return (dailyLicenseRate[_licenseId]);
     }
 
     /**
     * @dev Gets the time left on the license of the specified license
     * @param _licenseId uint256 ID of the license to query the timeleft
-    * @return time left in clocks
+    * @return time left in seconds
     */
     function getLicenseTimeLeft(uint256 _licenseId) public view returns (uint256) {
         address holder = licenseHolder[_licenseId];
@@ -98,4 +123,26 @@ contract LicenseManager is ERC721Token, Ownable {
         return (licReleaseTime[_licenseId] - now);
     }
 
+    /**
+    * @dev Gets if license is available
+    * @param _licenseId uint256 ID of the license to query
+    * @return returns if this license is available
+    */
+    function isLicenseAvailable(uint256 _licenseId) public view returns (bool) {
+        require(ownerOf(_licenseId) != address(0));
+        require(ownerOf(_licenseId) == licenseHolder[_licenseId]);
+        return true;
+    }
+
+    /**
+    * @dev Gets if a user has a license
+    * @param _holder address to query
+    * @param _licenseId uint256 ID of the license to query
+    * @return returns if this license is available
+    */
+    function hasLicense(address _holder, uint256 _licenseId) public view returns (bool) {
+        require(ownerOf(_licenseId) != address(0));
+        // This is the holder of the license and time has not expired.
+        return (_holder == licenseHolder[_licenseId] && (licReleaseTime[_licenseId] - now) > 0);
+    }
 }

@@ -9,7 +9,24 @@ These items can further be licensed (rented) by other users for a specified amou
 
 ### Usage
 
+Contract Owner can create a license asset with:
 
+    createLicense(LICENSE_ID)
+
+These can be transfered to a new owner with:
+
+    transfer(TO_ADDRESS, LICENSE_ID)
+
+By default, licenses are can not be licensed until the daily license rate is set:
+
+    isLicenseAvailable(LICENSE_ID) == false
+    setLicenseRate(LICENSE_ID, RATE)
+    isLicenseAvailable(LICENSE_ID) == true
+
+A user can obtain a license by paying RATE*DURATION:
+
+    obtainLicense(LICENSE_ID, DURATION)
+    
 This project and uses [truffle](https://github.com/trufflesuite/truffle) Ethereum smart contracts development framework. In order to run it, install truffle first:
 
     npm install -g truffle
