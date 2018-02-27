@@ -9,7 +9,6 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
  */
 contract LicenseManager is ERC721Token, Ownable {
     using SafeMath for uint256;
-    string public name = 'LicenseManager';
 
     // Mapping from license ID to license holder
     // It will be the owner if not currently licensed
@@ -20,6 +19,9 @@ contract LicenseManager is ERC721Token, Ownable {
 
     // Mapping from license ID to rental rate in wei (0 = not for rent)
     mapping (uint256 => uint256) private dailyLicenseRate;
+
+    // Holds the accumulated rent of the owners
+    mapping (address => uint256) private ownerBalances;
 
     // Constructor
     function LicenseManager() public {
@@ -71,6 +73,7 @@ contract LicenseManager is ERC721Token, Ownable {
     * requires the transaction sends funds for number of days times the daily cost
     */
     function obtainLicense(uint256 _licenseId, uint256 _daysOfLicense) public payable returns (bool) {
+        require(_daysOfLicense > 0);
         // There is a license owner
         require(ownerOf(_licenseId) != address(0));
         require(dailyLicenseRate[_licenseId] > 0);
@@ -81,15 +84,34 @@ contract LicenseManager is ERC721Token, Ownable {
         // The correct funds are sent
         require(msg.value == _daysOfLicense * dailyLicenseRate[_licenseId]);
 
-        // if the funds were sent to owner
-        if (ownerOf(_licenseId).send(msg.value)) {
-            // Grant the license
-            licenseHolder[_licenseId] = msg.sender;
-            licReleaseTime[_licenseId] = now + (_daysOfLicense * 1 days);
-            return true;
-		}
+        // Credit the funds to the owner
+        ownerBalances[ownerOf(_licenseId)] = msg.value;
+        // Grant the license
+        licenseHolder[_licenseId] = msg.sender;
+        licReleaseTime[_licenseId] = now + (_daysOfLicense * 1 days);
+        return true;
     }
 
+    /**
+    * @dev Allows a user to withdraw any balance granted to them by licenses.
+    */
+    function withdrawBalance() public {
+        address payee = msg.sender;
+        uint256 payment = ownerBalances[payee];
+        require(payment != 0);
+        require(this.balance >= payment);
+        ownerBalances[payee] = 0;
+        assert(payee.send(payment));
+    }
+
+    /**
+    * @dev Query the current balance of a owner.
+    * @return current balance in wei    
+    */
+    function getBalance() public view returns (uint256) {
+        return ownerBalances[msg.sender];
+    }
+    
     /**
     * @dev Gets the licenseHolder of the specified license
     * @param _licenseId uint256 ID of the license to query the licenseHolder of
