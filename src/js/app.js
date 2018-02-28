@@ -91,18 +91,23 @@ App = {
           return licenseInstance.isLicenseAvailable.call(licenseId);
       }).then(function(result) {
           console.log("License avail of "+ licenseId + " = "+ result);
+          // If the license is available
           if (result) {
+            // Turn on the panel for the license stats
             $('.panel-license').eq(licenseId).find('.licensor').text("Available");          
             $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
+            // For the owner, turn on rate button and turn off license
             if (accounts[0] === ownerId) {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
               $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
             } else {
+              // Others can license
               $('.panel-license').eq(licenseId).find('.panel-licbutton').show();          
             }         
             $('.panel-license').eq(licenseId).find('.panel-avail').show();
             $('.panel-license').eq(licenseId).find('.panel-notavail').hide();
           } else if (ownerId !== "0x") {
+            // Not available so turn off that stuff but leave the owner rate button
             $('.panel-license').eq(licenseId).find('.panel-avail').hide();
             $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
             $('.panel-license').eq(licenseId).find('.btn-claim').hide();
@@ -110,6 +115,7 @@ App = {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
             }         
             $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();
+            // Update the stats of license.
             App.handleUpdateLicense(licenseId);
           }
           App.handleGetRate(licenseId);
