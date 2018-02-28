@@ -69,10 +69,11 @@ App = {
   markLicenses: function(licenseId, account) {
     var licenseInstance;
     var ownerId;
-    $('.panel-license').eq(licenseId).find('.btn-claim').show();          
-    $('.panel-license').eq(licenseId).find('.btn-license').hide();          
-    $('.panel-license').eq(licenseId).find('.btn-setrate').hide();          
+    $('.panel-license').eq(licenseId).find('.panel-claim').show();          
+    $('.panel-license').eq(licenseId).find('.panel-license').hide();          
+    $('.panel-license').eq(licenseId).find('.panel-rate').hide();          
     $('.panel-license').eq(licenseId).find('.panel-avail').hide();
+    $('.panel-license').eq(licenseId).find('.panel-notavail').show();
 
     web3.eth.getAccounts(function(error, accounts) {
       App.contracts.LicenseManager.deployed().then(function(instance) {
@@ -88,20 +89,24 @@ App = {
           console.log("License avail of "+ licenseId + " = "+ result);
           if (result) {
             $('.panel-license').eq(licenseId).find('.licensor').text("Available");          
-            $('.panel-license').eq(licenseId).find('.btn-claim').hide();          
-            $('.panel-license').eq(licenseId).find('.btn-license').show();          
+            $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
             if (accounts[0] === ownerId) {
-              $('.panel-license').eq(licenseId).find('.btn-setrate').show();          
+              $('.panel-license').eq(licenseId).find('.panel-rate').show();          
+              $('.panel-license').eq(licenseId).find('.panel-license').hide();          
+            } else {
+              $('.panel-license').eq(licenseId).find('.panel-license').show();          
             }         
             $('.panel-license').eq(licenseId).find('.panel-avail').show();
+            $('.panel-license').eq(licenseId).find('.panel-notavail').hide();
             App.handleGetRate(licenseId);
           } else {
             $('.panel-license').eq(licenseId).find('.panel-avail').hide();
+            $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
             $('.panel-license').eq(licenseId).find('.btn-claim').hide();
             if (accounts[0] === ownerId) {
-              $('.panel-license').eq(licenseId).find('.btn-setrate').show();          
+              $('.panel-license').eq(licenseId).find('.panel-rate').show();          
             }         
-            $('.panel-license').eq(licenseId).find('.btn-license').hide();          
+            $('.panel-license').eq(licenseId).find('.panel-license').hide();          
             // return licenseInstance.getLicenseHolder.call(licenseId);
           }
         }).catch(function(err) {
@@ -192,10 +197,11 @@ App = {
 
   handleSetRate: function(event) {
     event.preventDefault();
-    console.log("Handle set rate");
-
     var licenseId = parseInt($(event.target).data('id'));
-
+    var rate = $('.panel-license').eq(licenseId).find('.input-rate').val();
+    console.log("Handle set rate " + rate);
+    if (rate == 0)
+      return;
     var licenseInstance;
 
     web3.eth.getAccounts(function(error, accounts) {
@@ -207,8 +213,12 @@ App = {
 
       App.contracts.LicenseManager.deployed().then(function(instance) {
         licenseInstance = instance;
-        return licenseInstance.setLicenseRate(licenseId, 200, {from: account});
+        return licenseInstance.setLicenseRate(licenseId, rate, {from: account});
       }).then(function(result) {
+        return licenseInstance.getLicenseRate.call(licenseId);
+      }).then(function(result) {
+        console.log("getRate " + result);
+        $('.panel-license').eq(licenseId).find('.rate').text(result);
         location.reload();
       }).catch(function(err) {
         console.log(err.message);

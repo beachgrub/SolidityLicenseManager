@@ -47,9 +47,21 @@
               <strong>Rate</strong>: <span class="rate">0</span><br/><br/>
               <strong>Time Left on License</strong>: <span class="timeLeft">0</span><br/><br/>
             </div>
-            <button class="btn btn-default btn-claim" type="button" data-id="0">Claim</button>
-            <button class="btn btn-default btn-license" type="button" data-id="1">License</button>
-            <button class="btn btn-default btn-setrate" type="button" data-id="2">Set Rate</button>
+            <div class="panel-notavail">
+              <br/>
+              <br/><br/>
+              <br/><br/>
+            </div>
+            <div class="panel-claim">
+              <button class="btn btn-default btn-claim" type="button" data-id="0">Claim</button>
+            </div>
+            <div class="panel-license">
+              <button class="btn btn-default btn-license" type="button" data-id="1">License (Days)</button>
+            </div>
+            <div class="panel-rate">
+              <button class="btn btn-default btn-setrate" type="button" data-id="2">Set Rate (Daily wei)</button>
+              <input class="input input-default input-rate" value="0" size="5" style="text-align: right"/>
+            </div>
           </div>
         </div>
       </div>

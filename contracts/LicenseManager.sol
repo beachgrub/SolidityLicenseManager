@@ -111,7 +111,7 @@ contract LicenseManager is ERC721Token, Ownable {
     function getBalance() public view returns (uint256) {
         return ownerBalances[msg.sender];
     }
-    
+
     /**
     * @dev Gets the licenseHolder of the specified license
     * @param _licenseId uint256 ID of the license to query the licenseHolder of
