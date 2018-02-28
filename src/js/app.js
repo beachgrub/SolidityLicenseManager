@@ -1,22 +1,22 @@
 App = {
   web3Provider: null,
+  licenseData: null,
   contracts: {},
-
   init: function() {
     // Load licenses.
-    $.getJSON('./license.json', function(data) {
+    $.getJSON('./license.json', function(licenseData) {
       var licenseRow = $('#licenseRow');
       var licenseTemplate = $('#licenseTemplate');
-
-      for (i = 0; i < data.length; i ++) {
-        console.log("data: "+data[i].name);
-        licenseTemplate.find('.panel-title').text(data[i].name);
-        licenseTemplate.find('img').attr('src', data[i].picture);
-        licenseTemplate.find('.owner').text(data[i].owner);
-        licenseTemplate.find('.licensor').text(data[i].licensor);
-        licenseTemplate.find('.rate').text(data[i].rate);
-        licenseTemplate.find('.timeLeft').text(data[i].timeLeft);
-        licenseTemplate.find('.btn-license').attr('data-id', data[i].id);
+      App.licenseData = licenseData;
+      for (i = 0; i < licenseData.length; i ++) {
+        console.log("licenseData: "+licenseData[i].name);
+        licenseTemplate.find('.panel-title').text(licenseData[i].name);
+        licenseTemplate.find('img').attr('src', licenseData[i].picture);
+        licenseTemplate.find('.owner').text(licenseData[i].owner);
+        licenseTemplate.find('.licensor').text(licenseData[i].licensor);
+        licenseTemplate.find('.rate').text(licenseData[i].rate);
+        licenseTemplate.find('.timeLeft').text(licenseData[i].timeLeft);
+        licenseTemplate.find('.btn-license').attr('data-id', licenseData[i].id);
 
         licenseRow.append(licenseTemplate.html());
       }
@@ -48,7 +48,11 @@ App = {
       // Set the provider for our contract.
       App.contracts.LicenseManager.setProvider(App.web3Provider);
 
-//      return App.getBalances();
+      // Use our contract to retrieve and mark the current license holders
+      for (i = 0; i < App.licenseData.length; i ++) {
+        var licenseId = App.licenseData[i].id;
+        App.markLicenses(licenseId);
+      }
     });
 
     return App.bindEvents();
@@ -58,6 +62,25 @@ App = {
     $(document).on('click', '.btn-license', App.handleLicense);
   },
 
+  markLicenses: function(licenseId, account) {
+    var licenseInstance;
+    console.log("markLicenses " + licenseId);
+    App.contracts.LicenseManager.deployed().then(function(instance) {
+      licenseInstance = instance;
+    
+      return licenseInstance.getAdopters.call();
+    }).then(function(licensors) {
+        
+//        licenseInstance.getBalance.call(account_one, {from: account_one});
+      
+        // if (licensors[i] !== '0x0000000000000000000000000000000000000000') {
+        //   $('.panel-license').eq(i).find('button').text('Success').attr('disabled', true);
+        // }
+    }).catch(function(err) {
+      console.log(err.message);
+    });
+  },
+  
   handleLicense: function(event) {
     event.preventDefault();
 
