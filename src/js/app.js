@@ -70,7 +70,7 @@ App = {
     var licenseInstance;
     var ownerId;
     $('.panel-license').eq(licenseId).find('.panel-claim').show();          
-    $('.panel-license').eq(licenseId).find('.panel-license').hide();          
+    $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
     $('.panel-license').eq(licenseId).find('.panel-rate').hide();          
     $('.panel-license').eq(licenseId).find('.panel-avail').hide();
     $('.panel-license').eq(licenseId).find('.panel-notavail').show();
@@ -92,9 +92,9 @@ App = {
             $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
             if (accounts[0] === ownerId) {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
-              $('.panel-license').eq(licenseId).find('.panel-license').hide();          
+              $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
             } else {
-              $('.panel-license').eq(licenseId).find('.panel-license').show();          
+              $('.panel-license').eq(licenseId).find('.panel-licbutton').show();          
             }         
             $('.panel-license').eq(licenseId).find('.panel-avail').show();
             $('.panel-license').eq(licenseId).find('.panel-notavail').hide();
@@ -106,7 +106,7 @@ App = {
             if (accounts[0] === ownerId) {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
             }         
-            $('.panel-license').eq(licenseId).find('.panel-license').hide();          
+            $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
             // return licenseInstance.getLicenseHolder.call(licenseId);
           }
         }).catch(function(err) {
@@ -142,7 +142,9 @@ App = {
     event.preventDefault();
 
     var licenseId = parseInt($(event.target).data('id'));
-
+    var length = $('.panel-license').eq(licenseId).find('.in-licdays').val();
+    if (length <= 0)
+      return;
     var licenseInstance;
 
     console.log("Handle license");
@@ -158,10 +160,9 @@ App = {
         var owner = licenseInstance.ownerOf.call(licenseId);
 
         console.log("claim owner "+ owner);
-        return licenseInstance.createLicense(licenseId, {from: account});
+        return licenseInstance.obtainLicense(licenseId, length, {from: account});
       }).then(function(result) {
         location.reload();
-//        return App.getBalances();
       }).catch(function(err) {
         console.log(err.message);
       });
@@ -198,7 +199,7 @@ App = {
   handleSetRate: function(event) {
     event.preventDefault();
     var licenseId = parseInt($(event.target).data('id'));
-    var rate = $('.panel-license').eq(licenseId).find('.input-rate').val();
+    var rate = $('.panel-license').eq(licenseId).find('.in-setrate').val();
     console.log("Handle set rate " + rate);
     if (rate == 0)
       return;
