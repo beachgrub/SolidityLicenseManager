@@ -3,6 +3,25 @@ App = {
   contracts: {},
 
   init: function() {
+    // Load licenses.
+    $.getJSON('../LicenseManager.json', function(data) {
+      var licenseRow = $('#licenseRow');
+      var licenseTemplate = $('#licenseTemplate');
+
+      for (i = 0; i < data.length; i ++) {
+        console.log("data: "+data[i].name);
+        licenseTemplate.find('.panel-title').text(data[i].name);
+        licenseTemplate.find('img').attr('src', data[i].picture);
+        licenseTemplate.find('.owner').text(data[i].owner);
+        licenseTemplate.find('.licensor').text(data[i].licensor);
+        licenseTemplate.find('.rate').text(data[i].rate);
+        licenseTemplate.find('.timeLeft').text(data[i].timeLeft);
+        licenseTemplate.find('.btn-license').attr('data-id', data[i].id);
+
+        licenseRow.append(licenseTemplate.html());
+      }
+    });
+
     return App.initWeb3();
   },
 
@@ -21,34 +40,30 @@ App = {
   },
 
   initContract: function() {
-    $.getJSON('TutorialToken.json', function(data) {
+    $.getJSON('LicenseManager.json', function(data) {
       // Get the necessary contract artifact file and instantiate it with truffle-contract.
-      var TutorialTokenArtifact = data;
-      App.contracts.TutorialToken = TruffleContract(TutorialTokenArtifact);
+      var LicenseManagerArtifact = data;
+      App.contracts.LicenseManager = TruffleContract(LicenseManagerArtifact);
 
       // Set the provider for our contract.
-      App.contracts.TutorialToken.setProvider(App.web3Provider);
+      App.contracts.LicenseManager.setProvider(App.web3Provider);
 
-      // Use our contract to retieve and mark the adopted pets.
-      return App.getBalances();
+//      return App.getBalances();
     });
 
     return App.bindEvents();
   },
 
   bindEvents: function() {
-    $(document).on('click', '#transferButton', App.handleTransfer);
+    $(document).on('click', '.btn-license', App.handleLicense);
   },
 
-  handleTransfer: function(event) {
+  handleLicense: function(event) {
     event.preventDefault();
 
-    var amount = parseInt($('#TTTransferAmount').val());
-    var toAddress = $('#TTTransferAddress').val();
+    var licenseId = parseInt($(event.target).data('id'));
 
-    console.log('Transfer ' + amount + ' TT to ' + toAddress);
-
-    var tutorialTokenInstance;
+    var licenseInstance;
 
     web3.eth.getAccounts(function(error, accounts) {
       if (error) {
@@ -57,44 +72,19 @@ App = {
 
       var account = accounts[0];
 
-      App.contracts.TutorialToken.deployed().then(function(instance) {
-        tutorialTokenInstance = instance;
+      App.contracts.LicenseManager.deployed().then(function(instance) {
+        licenseInstance = instance;
 
-        return tutorialTokenInstance.transfer(toAddress, amount, {from: account});
+      //  return licenseInstance.transfer(toAddress, amount, {from: account});
       }).then(function(result) {
         alert('Transfer Successful!');
-        return App.getBalances();
+//        return App.getBalances();
       }).catch(function(err) {
         console.log(err.message);
       });
     });
   },
 
-  getBalances: function() {
-    console.log('Getting balances...');
-
-    var tutorialTokenInstance;
-
-    web3.eth.getAccounts(function(error, accounts) {
-      if (error) {
-        console.log(error);
-      }
-
-      var account = accounts[0];
-
-      App.contracts.TutorialToken.deployed().then(function(instance) {
-        tutorialTokenInstance = instance;
-
-        return tutorialTokenInstance.balanceOf(account);
-      }).then(function(result) {
-        balance = result.c[0];
-
-        $('#TTBalance').text(balance);
-      }).catch(function(err) {
-        console.log(err.message);
-      });
-    });
-  }
 
 };
 

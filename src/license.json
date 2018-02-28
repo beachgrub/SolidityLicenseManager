@@ -1,0 +1,182 @@
+[
+  {
+    "id": 0,
+    "name": "Anti Aircraft Gun",
+    "picture": "images/aagun.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 1,
+    "name": "Airship",
+    "picture": "images/airship.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 2,
+    "name": "Ambulance",
+    "picture": "images/ambulance.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 3,
+    "name": "Anti Aircraft Gun",
+    "picture": "images/antiaircraft.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 4,
+    "name": "Bomb",
+    "picture": "images/bomb.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 5,
+    "name": "Bridge",
+    "picture": "images/bridge.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 6,
+    "name": "Camel",
+    "picture": "images/camel.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 7,
+    "name": "Cannon",
+    "picture": "images/cannon.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 8,
+    "name": "Cannon Torpedo",
+    "picture": "images/cannontorpedo.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 9,
+    "name": "Catapult Bomb",
+    "picture": "images/catapult.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 10,
+    "name": "Destroyer",
+    "picture": "images/catapult.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 11,
+    "name": "Fort",
+    "picture": "images/fort.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 12,
+    "name": "Life Raft",
+    "picture": "images/liferaft.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 13,
+    "name": "Machine Gun",
+    "picture": "images/machinegun.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 14,
+    "name": "Mine",
+    "picture": "images/mine.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 15,
+    "name": "Mortar",
+    "picture": "images/mortar.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 16,
+    "name": "Parachute",
+    "picture": "images/parachute.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 17,
+    "name": "Periscope",
+    "picture": "images/periscope.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 18,
+    "name": "Submarine",
+    "picture": "images/submarine.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  },
+  {
+    "id": 18,
+    "name": "Torpedo",
+    "picture": "images/torpedo.jpg",
+    "owner": "Unclaimed",
+    "licensor": "Unclaimed",
+    "rate": 0,
+    "timeLeft": 0
+  }
+  ]
