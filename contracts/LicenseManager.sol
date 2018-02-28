@@ -128,7 +128,6 @@ contract LicenseManager is ERC721Token, Ownable {
     * @return daily rate in wei
     */
     function getLicenseRate(uint256 _licenseId) public view returns (uint256) {
-        require(ownerOf(_licenseId) != address(0));
         return (dailyLicenseRate[_licenseId]);
     }
 
@@ -138,7 +137,8 @@ contract LicenseManager is ERC721Token, Ownable {
     * @return time left in seconds
     */
     function getLicenseTimeLeft(uint256 _licenseId) public view returns (uint256) {
-        require(licenseHolder[_licenseId] != ownerOf(_licenseId));
+        if (licenseHolder[_licenseId] == ownerOf(_licenseId) || ownerOf(_licenseId) == address(0))
+            return (0);
         return (licReleaseTime[_licenseId] - now);
     }
 
@@ -148,9 +148,9 @@ contract LicenseManager is ERC721Token, Ownable {
     * @return returns if this license is available
     */
     function isLicenseAvailable(uint256 _licenseId) public view returns (bool) {
-        require(ownerOf(_licenseId) != address(0));
-        require(ownerOf(_licenseId) == licenseHolder[_licenseId]);
-        return dailyLicenseRate[_licenseId] > 0;
+        return (ownerOf(_licenseId) != address(0) && 
+                ownerOf(_licenseId) == licenseHolder[_licenseId] && 
+                dailyLicenseRate[_licenseId] > 0);
     }
 
     /**
