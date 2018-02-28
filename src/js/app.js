@@ -4,7 +4,7 @@ App = {
 
   init: function() {
     // Load licenses.
-    $.getJSON('../LicenseManager.json', function(data) {
+    $.getJSON('./license.json', function(data) {
       var licenseRow = $('#licenseRow');
       var licenseTemplate = $('#licenseTemplate');
 
