@@ -83,7 +83,7 @@ App = {
       }).then(function(result) {
           console.log("License owner of "+ licenseId + " = "+ result);
           ownerId = result;
-          if (ownerId == "0x0") { // No owner
+          if (ownerId == "0x") { // No owner
             $('.panel-license').eq(licenseId).find('.owner').text("Available");          
           } else {
             $('.panel-license').eq(licenseId).find('.owner').text(result.substring(0,10) + "...");          
@@ -102,16 +102,17 @@ App = {
             }         
             $('.panel-license').eq(licenseId).find('.panel-avail').show();
             $('.panel-license').eq(licenseId).find('.panel-notavail').hide();
-            App.handleGetRate(licenseId);
-          } else if (ownerId !== "0x0") {
+          } else if (ownerId !== "0x") {
             $('.panel-license').eq(licenseId).find('.panel-avail').hide();
             $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
             $('.panel-license').eq(licenseId).find('.btn-claim').hide();
             if (accounts[0] === ownerId) {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
             }         
-            $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
+            $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();
+            App.handleUpdateLicense(licenseId);
           }
+          App.handleGetRate(licenseId);
         }).catch(function(err) {
           console.log(err.message);
       });
@@ -134,7 +135,63 @@ App = {
         return licenseInstance.getLicenseRate.call(licenseId);
       }).then(function(result) {
         console.log("getRate " + result);
-        $('.panel-license').eq(licenseId).find('.rate').text(result);
+        var ethRate = web3.fromWei(result,"ether").toFixed(6);
+        $('.panel-license').eq(licenseId).find('.rate').text(ethRate);
+      }).catch(function(err) {
+        console.log(err.message);
+      });
+    });
+  },
+
+  handleGetLicensor: function(licenseId) {
+
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+
+      App.contracts.LicenseManager.deployed().then(function(instance) {
+        licenseInstance = instance;
+        return licenseInstance.getLicenseHolder.call(licenseId);
+      }).then(function(result) {
+        console.log("getLicenseHolder " + result);
+        $('.panel-license').eq(licenseId).find('.licensor').text(result.substring(0,10) + "...");
+      }).catch(function(err) {
+        console.log(err.message);
+      });
+    });
+  },
+  
+  handleUpdateLicense: function(licenseId) {
+
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+      var timeLeft = 0.0;
+      App.contracts.LicenseManager.deployed().then(function(instance) {
+        licenseInstance = instance;
+        return licenseInstance.getLicenseTimeLeft.call(licenseId);
+      }).then(function(result) {
+        timeLeft = (result / (60.0 * 60.0 * 24.0)).toFixed(2);
+        console.log("License time " + result);
+        if (result > 0) {
+          $('.panel-license').eq(licenseId).find('.timeLeft').text(timeLeft);
+          $('.panel-license').eq(licenseId).find('.panel-avail').show();
+          $('.panel-license').eq(licenseId).find('.panel-notavail').hide();  
+          $('.panel-license').eq(licenseId).find('.panel-rate').hide();          
+          App.handleGetLicensor(licenseId); 
+        } else {
+          $('.panel-license').eq(licenseId).find('.timeLeft').text("0");          
+        }
       }).catch(function(err) {
         console.log(err.message);
       });
@@ -148,6 +205,15 @@ App = {
     var length = $('.panel-license').eq(licenseId).find('.in-licdays').val();
     if (length <= 0)
       return;
+    console.log("Length "+ length);
+    var rate = $('.panel-license').eq(licenseId).find('.rate').text();
+    console.log("Rate "+ rate);
+    if (rate <= 0)
+      return;
+
+    var cost = rate * length;
+    cost = web3.toWei(cost,"ether");
+    console.log("Cost "+ cost);
     var licenseInstance;
 
     console.log("Handle license");
@@ -163,7 +229,7 @@ App = {
         var owner = licenseInstance.ownerOf.call(licenseId);
 
         console.log("claim owner "+ owner);
-        return licenseInstance.obtainLicense(licenseId, length, {from: account});
+        return licenseInstance.obtainLicense(licenseId, length,  {value: cost, from: account});
       }).then(function(result) {
         location.reload();
       }).catch(function(err) {
@@ -217,13 +283,9 @@ App = {
 
       App.contracts.LicenseManager.deployed().then(function(instance) {
         licenseInstance = instance;
-        return licenseInstance.setLicenseRate(licenseId, rate, {from: account});
+        return licenseInstance.setLicenseRate(licenseId, web3.toWei(rate,"ether"), {from: account});
       }).then(function(result) {
-        return licenseInstance.getLicenseRate.call(licenseId);
-      }).then(function(result) {
-        console.log("getRate " + result);
-        $('.panel-license').eq(licenseId).find('.rate').text(result);
-        location.reload();
+        App.handleGetRate();
       }).catch(function(err) {
         console.log(err.message);
       });
