@@ -78,12 +78,16 @@ App = {
     web3.eth.getAccounts(function(error, accounts) {
       App.contracts.LicenseManager.deployed().then(function(instance) {
         licenseInstance = instance;
-      
+        
         return licenseInstance.ownerOf.call(licenseId);
       }).then(function(result) {
           console.log("License owner of "+ licenseId + " = "+ result);
           ownerId = result;
-          $('.panel-license').eq(licenseId).find('.owner').text(result.substring(0,10) + "...");          
+          if (ownerId == "0x0") { // No owner
+            $('.panel-license').eq(licenseId).find('.owner').text("Available");          
+          } else {
+            $('.panel-license').eq(licenseId).find('.owner').text(result.substring(0,10) + "...");          
+          }
           return licenseInstance.isLicenseAvailable.call(licenseId);
       }).then(function(result) {
           console.log("License avail of "+ licenseId + " = "+ result);
@@ -99,7 +103,7 @@ App = {
             $('.panel-license').eq(licenseId).find('.panel-avail').show();
             $('.panel-license').eq(licenseId).find('.panel-notavail').hide();
             App.handleGetRate(licenseId);
-          } else {
+          } else if (ownerId !== "0x0") {
             $('.panel-license').eq(licenseId).find('.panel-avail').hide();
             $('.panel-license').eq(licenseId).find('.panel-claim').hide();          
             $('.panel-license').eq(licenseId).find('.btn-claim').hide();
@@ -107,7 +111,6 @@ App = {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
             }         
             $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
-            // return licenseInstance.getLicenseHolder.call(licenseId);
           }
         }).catch(function(err) {
           console.log(err.message);
