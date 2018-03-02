@@ -10,6 +10,12 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 contract LicenseManager is ERC721Token, Ownable {
     using SafeMath for uint256;
 
+    // Events
+    event CreateLicense(uint256 _licenseId);
+    event ReleaseLicense(uint256 _licenseId);
+    event ObtainLicense(address indexed _to, uint256 _licenseId, uint256 _daysOfLicense);
+    event SetLicenseRate(uint256 _licenseId, uint256 _rate);
+
     // Mapping from license ID to license holder
     // It will be the owner if not currently licensed
     mapping (uint256 => address) private licenseHolder;
@@ -35,6 +41,7 @@ contract LicenseManager is ERC721Token, Ownable {
     function createLicense(uint256 _licenseId) onlyOwner public returns (bool) {
         _mint(msg.sender, _licenseId);
         licenseHolder[_licenseId] = msg.sender;
+        CreateLicense(_licenseId);
         return true;
     }
 
@@ -50,6 +57,7 @@ contract LicenseManager is ERC721Token, Ownable {
         require(now >= licReleaseTime[_licenseId]);
         // Clear out the license
         licenseHolder[_licenseId] = ownerOf(_licenseId);
+        CreateLicense(_licenseId);
         return true;
     }
 
@@ -58,11 +66,12 @@ contract LicenseManager is ERC721Token, Ownable {
     * @param _licenseId The id of license to rent.
     * @return A boolean that indicates if the operation was successful.
     */
-    function setLicenseRate(uint256 _licenseId, uint256 rate) public returns (bool) {
+    function setLicenseRate(uint256 _licenseId, uint256 _rate) public returns (bool) {
         // Sender is license owner
         require(ownerOf(_licenseId) == msg.sender);
         // Set the license rate
-        dailyLicenseRate[_licenseId] = rate;
+        dailyLicenseRate[_licenseId] = _rate;
+        SetLicenseRate(_licenseId, _rate);
         return true;
     }
 
@@ -89,6 +98,7 @@ contract LicenseManager is ERC721Token, Ownable {
         // Grant the license
         licenseHolder[_licenseId] = msg.sender;
         licReleaseTime[_licenseId] = now + (_daysOfLicense * 1 days);
+        ObtainLicense(msg.sender, _licenseId, _daysOfLicense);
         return true;
     }
 
