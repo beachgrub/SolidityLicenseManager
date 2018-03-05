@@ -149,6 +149,8 @@ contract LicenseManager is ERC721Token, Ownable {
     function getLicenseTimeLeft(uint256 _licenseId) public view returns (uint256) {
         if (licenseHolder[_licenseId] == ownerOf(_licenseId) || ownerOf(_licenseId) == address(0))
             return (0);
+        if (now >= licReleaseTime[_licenseId])
+            return (0);
         return (licReleaseTime[_licenseId] - now);
     }
 

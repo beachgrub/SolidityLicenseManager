@@ -1,6 +1,7 @@
 App = {
   web3Provider: null,
   licenseData: null,
+  rentBalance: 0,
   contracts: {},
   init: function() {
     // Load licenses.
@@ -55,6 +56,7 @@ App = {
         var licenseId = App.licenseData[i].id;
         App.markLicenses(licenseId);
       }
+      App.handleGetBalance();
     });
 
     return App.bindEvents();
@@ -64,6 +66,7 @@ App = {
     $(document).on('click', '.btn-claim', App.handleClaim);
     $(document).on('click', '.btn-license', App.handleLicense);
     $(document).on('click', '.btn-setrate', App.handleSetRate);
+    $(document).on('click', '.btn-getbalance', App.handleWithdrawBalance);
   },
 
   markLicenses: function(licenseId, account) {
@@ -140,7 +143,7 @@ App = {
         licenseInstance = instance;
         return licenseInstance.getLicenseRate.call(licenseId);
       }).then(function(result) {
-        console.log("getRate " + result);
+        console.log("getLicenseRate " + result);
         var ethRate = web3.fromWei(result,"ether").toFixed(6);
         $('.panel-license').eq(licenseId).find('.rate').text(ethRate);
       }).catch(function(err) {
@@ -171,7 +174,58 @@ App = {
       });
     });
   },
+
+  handleGetBalance: function(licenseId) {
+
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+
+      App.contracts.LicenseManager.deployed().then(function(instance) {
+        licenseInstance = instance;
+        return licenseInstance.getBalance.call(licenseId);
+      }).then(function(result) {
+        var ethRate = web3.fromWei(result,"ether").toFixed(6);
+        console.log("getBalance " + result);
+        rentBalance = result;
+        $(document).find('.btn-getbalance').text("Rental Balance (Ether): "+ethRate);
+      }).catch(function(err) {
+        console.log(err.message);
+      });
+    });
+  },
   
+  handleWithdrawBalance: function(licenseId) {
+
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      if (rentBalance <= 0)
+        return;
+      var account = accounts[0];
+      console.log("withdrawBalance start");
+
+      App.contracts.LicenseManager.deployed().then(function(instance) {
+        licenseInstance = instance;
+        return licenseInstance.withdrawBalance();
+      }).then(function(result) {
+        console.log("withdrawBalance Success");
+        App.handleGetBalance();
+      }).catch(function(err) {
+        console.log(err.message);
+      });
+    });
+  },
+
   handleUpdateLicense: function(licenseId) {
 
     var licenseInstance;
