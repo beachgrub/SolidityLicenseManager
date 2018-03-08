@@ -12,7 +12,7 @@ module.exports = {
 };
 */
 var HDWalletProvider = require("truffle-hdwallet-provider");
-var mnemonic = "finger uncover spoon banner cart patch warfare diary outer two receive modify";
+var mnemonic = "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
 module.exports = {
   networks: {
     rinkeby: {

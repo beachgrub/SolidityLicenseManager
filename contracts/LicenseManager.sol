@@ -26,8 +26,9 @@ contract LicenseManager is ERC721Token, Ownable {
     // Mapping from license ID to rental rate in wei (0 = not for rent)
     mapping (uint256 => uint256) private dailyLicenseRate;
 
-    // Holds the accumulated rent of the owners
-    mapping (address => uint256) private ownerBalances;
+    // Holds the accumulated rent of the owners in the tokens
+    // Since the token could be rented, it is not held in the users address
+    mapping (uint256 => uint256) private tokenBalances;
 
     // Constructor
     function LicenseManager() public {
@@ -93,8 +94,8 @@ contract LicenseManager is ERC721Token, Ownable {
         // The correct funds are sent
         require(msg.value == _daysOfLicense * dailyLicenseRate[_licenseId]);
 
-        // Credit the funds to the owner
-        ownerBalances[ownerOf(_licenseId)] = msg.value;
+        // Credit the funds to the toekn
+        tokenBalances[_licenseId] = msg.value;
         // Grant the license
         licenseHolder[_licenseId] = msg.sender;
         licReleaseTime[_licenseId] = now + (_daysOfLicense * 1 days);
@@ -107,10 +108,14 @@ contract LicenseManager is ERC721Token, Ownable {
     */
     function withdrawBalance() public {
         address payee = msg.sender;
-        uint256 payment = ownerBalances[payee];
+        uint256 payment = 0;
+        uint256[] memory tokens = tokensOf(payee);
+        for (uint i = 0; i < tokens.length; i++) {
+            payment = payment.add(tokenBalances[tokens[i]]);
+            tokenBalances[tokens[i]] = 0;
+        }
         require(payment != 0);
         require(this.balance >= payment);
-        ownerBalances[payee] = 0;
         assert(payee.send(payment));
     }
 
@@ -119,7 +124,13 @@ contract LicenseManager is ERC721Token, Ownable {
     * @return current balance in wei    
     */
     function getBalance() public view returns (uint256) {
-        return ownerBalances[msg.sender];
+        address payee = msg.sender;
+        uint256 payment = 0;
+        uint256[] memory tokens = tokensOf(payee);
+        for (uint i = 0; i < tokens.length; i++) {
+            payment = payment.add(tokenBalances[tokens[i]]);
+        }
+        return payment;
     }
 
     /**

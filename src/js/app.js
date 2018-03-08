@@ -20,6 +20,7 @@ App = {
         licenseTemplate.find('.btn-license').attr('data-id', licenseData[i].id);
         licenseTemplate.find('.btn-claim').attr('data-id', licenseData[i].id);
         licenseTemplate.find('.btn-setrate').attr('data-id', licenseData[i].id);
+        licenseTemplate.find('.btn-setsale').attr('data-id', licenseData[i].id);
 
         licenseRow.append(licenseTemplate.html());
       }
@@ -59,6 +60,17 @@ App = {
       App.handleGetBalance();
     });
 
+    $.getJSON('LicenseSale.json', function(data) {
+      // Get the necessary contract artifact file and instantiate it with truffle-contract.
+      var LicenseSaleArtifact = data;
+      App.contracts.LicenseSale = TruffleContract(LicenseSaleArtifact);
+
+      // Set the provider for our contract.
+      App.contracts.LicenseSale.setProvider(App.web3Provider);
+
+      App.handleGetSale();
+    });
+
     return App.bindEvents();
   },
 
@@ -66,6 +78,7 @@ App = {
     $(document).on('click', '.btn-claim', App.handleClaim);
     $(document).on('click', '.btn-license', App.handleLicense);
     $(document).on('click', '.btn-setrate', App.handleSetRate);
+    $(document).on('click', '.btn-setsale', App.handleSetSale);
     $(document).on('click', '.btn-getbalance', App.handleWithdrawBalance);
   },
 
@@ -75,6 +88,7 @@ App = {
     $('.panel-license').eq(licenseId).find('.panel-claim').show();          
     $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
     $('.panel-license').eq(licenseId).find('.panel-rate').hide();          
+    $('.panel-license').eq(licenseId).find('.panel-sale').hide();          
     $('.panel-license').eq(licenseId).find('.panel-avail').hide();
     $('.panel-license').eq(licenseId).find('.panel-notavail').show();
 
@@ -102,6 +116,7 @@ App = {
             // For the owner, turn on rate button and turn off license
             if (accounts[0] === ownerId) {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
+              $('.panel-license').eq(licenseId).find('.panel-sale').show();          
               $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
             } else {
               // Others can license
@@ -116,6 +131,7 @@ App = {
             $('.panel-license').eq(licenseId).find('.btn-claim').hide();
             if (accounts[0] === ownerId) {
               $('.panel-license').eq(licenseId).find('.panel-rate').show();          
+              $('.panel-license').eq(licenseId).find('.panel-sale').show();          
             }         
             $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();
             // Update the stats of license.
@@ -248,6 +264,7 @@ App = {
           $('.panel-license').eq(licenseId).find('.panel-avail').show();
           $('.panel-license').eq(licenseId).find('.panel-notavail').hide();  
           $('.panel-license').eq(licenseId).find('.panel-rate').hide();          
+          $('.panel-license').eq(licenseId).find('.panel-sale').hide();          
           App.handleGetLicensor(licenseId); 
         } else {
           $('.panel-license').eq(licenseId).find('.timeLeft').text("0");          
@@ -317,7 +334,12 @@ App = {
         licenseInstance = instance;
         return licenseInstance.createLicense(licenseId, {from: account});
       }).then(function(result) {
-        location.reload();
+        console.log("Claim succeeded: "+ result);
+        for (var i = 0; i < result.logs.length; i++) {
+          var log = result.logs[i];
+          console.log("event "+log.event + ", " + log.args);
+        }
+          location.reload();
 //        return App.getBalances();
       }).catch(function(err) {
         console.log(err.message);
@@ -351,6 +373,58 @@ App = {
       });
     });
   },
+
+  handleSetSale: function(event) {
+    event.preventDefault();
+    var licenseId = parseInt($(event.target).data('id'));
+    var rate = $('.panel-license').eq(licenseId).find('.in-setsale').val();
+    console.log("Handle set: " + licenseId + "= " + rate);
+    if (rate == 0)
+      return;
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+
+      App.contracts.LicenseSale.deployed().then(function(instance) {
+        licenseInstance = instance;
+        return licenseInstance.createSale(licenseId, web3.toWei(rate,"ether"), {from: account});
+      }).then(function(result) {
+        console.log("setSale success");
+
+      }).catch(function(err) {
+        console.log("SetSale error: "+ err.message);
+      });
+    });
+  },
+  
+  handleGetSale: function(event) {
+    var licenseInstance;
+
+    console.log("handleSale");
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+
+      App.contracts.LicenseSale.deployed().then(function(instance) {
+        licenseInstance = instance;
+        return licenseInstance.getSale.call(0);
+ //       return licenseInstance.getTokenContract.call();
+      }).then(function(result) {
+        console.log("getSale " + result);
+      }).catch(function(err) {
+        console.log("GetSale error: "+ err.message);
+      });
+    });
+  },
+
 };
 
 $(function() {

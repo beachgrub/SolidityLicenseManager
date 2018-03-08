@@ -203,6 +203,10 @@ contract LicenseSale is Pausable, LicenseSaleBase {
         nonFungibleContract = candidateContract;
     }
 
+    function getTokenContract() public returns (ERC721) {
+       return nonFungibleContract;
+    }
+
     /// @dev Remove all Ether from the contract, which is the owner's cuts
     ///  as well as any Ether sent directly to the contract address.
     ///  Always transfers to the NFT contract, but can be called either by
@@ -222,11 +226,9 @@ contract LicenseSale is Pausable, LicenseSaleBase {
     /// @dev Creates and begins a new sale.
     /// @param _tokenId - ID of token to sell, sender must be owner.
     /// @param _price - Price of item (in wei) sale.
-    /// @param _seller - Seller, if not the message sender
     function createSale(
         uint256 _tokenId,
-        uint256 _price,
-        address _seller
+        uint256 _price
     )
         external
         whenNotPaused
@@ -238,7 +240,7 @@ contract LicenseSale is Pausable, LicenseSaleBase {
         require(_owns(msg.sender, _tokenId));
         _escrow(_tokenId);
         Sale memory sale = Sale(
-            _seller,
+            msg.sender,
             uint128(_price),
             uint64(now)
         );
