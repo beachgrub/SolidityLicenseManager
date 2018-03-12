@@ -2,6 +2,7 @@ pragma solidity ^0.4.17;
 
 import 'zeppelin-solidity/contracts/token/ERC721/ERC721Token.sol';
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./LicenseSale.sol";
 
 /**
  * @title LicenseManager
@@ -9,6 +10,34 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
  */
 contract LicenseManager is ERC721Token, Ownable {
     using SafeMath for uint256;
+
+    /// @notice Name and symbol of the non fungible token, as defined in ERC721.
+    string public constant name = "LicenseManager";
+    string public constant symbol = "LM";
+
+    bytes4 constant InterfaceSignature_ERC165 =
+        bytes4(keccak256('supportsInterface(bytes4)'));
+
+    bytes4 constant InterfaceSignature_ERC721 =
+        bytes4(keccak256('name()')) ^
+        bytes4(keccak256('symbol()')) ^
+        bytes4(keccak256('balanceOf(address)')) ^
+        bytes4(keccak256('ownerOf(uint256)')) ^
+        bytes4(keccak256('approve(address,uint256)')) ^
+        bytes4(keccak256('transfer(address,uint256)')) ^
+        bytes4(keccak256('transferFrom(address,address,uint256)')) ^
+        bytes4(keccak256('takeOwnership(uint256)'));
+
+    /// @notice Introspection interface as per ERC-165 (https://github.com/ethereum/EIPs/issues/165).
+    ///  Returns true for any standardized interfaces implemented by this contract. We implement
+    ///  ERC-165 (obviously!) and ERC-721.
+    function supportsInterface(bytes4 _interfaceID) external pure returns (bool)
+    {
+        // DEBUG ONLY
+        //require((InterfaceSignature_ERC165 == 0x01ffc9a7) && (InterfaceSignature_ERC721 == 0x9a20483d));
+
+        return ((_interfaceID == InterfaceSignature_ERC165) || (_interfaceID == InterfaceSignature_ERC721));
+    }
 
     // Events
     event CreateLicense(uint256 _licenseId);
@@ -30,8 +59,23 @@ contract LicenseManager is ERC721Token, Ownable {
     // Since the token could be rented, it is not held in the users address
     mapping (uint256 => uint256) private tokenBalances;
 
+    /// @dev The address of the LicenseSale contract that handles sale of tokens
+    LicenseSale public licenseSale;
+
     // Constructor
     function LicenseManager() public {
+    }
+
+    /// @dev Sets the reference to the license sale contract.
+    /// @param _address - Address of sale contract.
+    function setLicenseSaleAddress(address _address) external onlyOwner {
+        LicenseSale candidateContract = LicenseSale(_address);
+
+        // NOTE: verify that a contract is what we expect - https://github.com/Lunyr/crowdsale-contracts/blob/cfadd15986c30521d8ba7d5b6f57b4fefcc7ac38/contracts/LunyrToken.sol#L117
+        require(candidateContract.isLicenseSale());
+
+        // Set the new contract address
+        licenseSale = candidateContract;
     }
 
     /**
@@ -187,4 +231,26 @@ contract LicenseManager is ERC721Token, Ownable {
         // This is the holder of the license and time has not expired.
         return (_holder == licenseHolder[_licenseId] && (licReleaseTime[_licenseId] - now) > 0);
     }
+
+    /// @dev Put a token up for sale.
+    ///  Does some ownership trickery to create sale in one tx.
+    function createSale(
+        uint256 _tokenId,
+        uint256 _price
+    )
+        external
+    {
+        // If token is already on any sale, this will throw
+        // because it will be owned by the sale contract.
+        require(ownerOf(_tokenId) == msg.sender);
+        approve(licenseSale, _tokenId);
+        // Sale throws if inputs are invalid and clears
+        // transfer approval after escrowing the token.
+        licenseSale.createSale(
+            _tokenId,
+            _price,
+            msg.sender
+        );
+    }
+
 }

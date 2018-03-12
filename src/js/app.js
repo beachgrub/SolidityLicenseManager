@@ -367,7 +367,8 @@ App = {
         licenseInstance = instance;
         return licenseInstance.setLicenseRate(licenseId, web3.toWei(rate,"ether"), {from: account});
       }).then(function(result) {
-        App.handleGetRate();
+        console.log("SetRate: success");
+//        App.handleGetRate();
       }).catch(function(err) {
         console.log(err.message);
       });
@@ -390,11 +391,12 @@ App = {
 
       var account = accounts[0];
 
-      App.contracts.LicenseSale.deployed().then(function(instance) {
+      App.contracts.LicenseManager.deployed().then(function(instance) {
         licenseInstance = instance;
+    
         return licenseInstance.createSale(licenseId, web3.toWei(rate,"ether"), {from: account});
       }).then(function(result) {
-        console.log("setSale success");
+        console.log("setSale success "+result);
 
       }).catch(function(err) {
         console.log("SetSale error: "+ err.message);

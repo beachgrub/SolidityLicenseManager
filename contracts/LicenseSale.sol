@@ -40,10 +40,11 @@ contract LicenseSaleBase {
 
     /// @dev Escrows the NFT, assigning ownership to this contract.
     /// Throws if the escrow fails.
+    /// @param _owner - Current owner address of token to escrow.
     /// @param _tokenId - ID of token whose approval to verify.
-    function _escrow(uint256 _tokenId) internal {
+    function _escrow(address _owner, uint256 _tokenId) internal {
         // it will throw if transfer fails
-        nonFungibleContract.transfer(this, _tokenId);
+        nonFungibleContract.transferFrom(_owner, this, _tokenId);
     }
 
     /// @dev Transfers an NFT owned by this contract to another address.
@@ -188,6 +189,10 @@ contract Pausable is Ownable {
 /// @notice We omit a fallback function to prevent accidental sends to this contract.
 contract LicenseSale is Pausable, LicenseSaleBase {
 
+    // @dev Sanity check that allows us to ensure that we are pointing to the
+    //  right contract in our setSaleContractAddress() call.
+    bool public isLicenseSale = true;
+
     /// @dev The ERC-165 interface signature for ERC-721.
     ///  Ref: https://github.com/ethereum/EIPs/issues/165
     ///  Ref: https://github.com/ethereum/EIPs/issues/721
@@ -203,7 +208,7 @@ contract LicenseSale is Pausable, LicenseSaleBase {
         nonFungibleContract = candidateContract;
     }
 
-    function getTokenContract() public returns (ERC721) {
+    function getTokenContract() public view returns (ERC721) {
        return nonFungibleContract;
     }
 
@@ -226,9 +231,11 @@ contract LicenseSale is Pausable, LicenseSaleBase {
     /// @dev Creates and begins a new sale.
     /// @param _tokenId - ID of token to sell, sender must be owner.
     /// @param _price - Price of item (in wei) sale.
+    /// @param _seller - owner of token.
     function createSale(
         uint256 _tokenId,
-        uint256 _price
+        uint256 _price,
+        address _seller
     )
         external
         whenNotPaused
@@ -236,11 +243,12 @@ contract LicenseSale is Pausable, LicenseSaleBase {
         // Sanity check that no inputs overflow how many bits we've allocated
         // to store them in the auction struct.
         require(_price == uint256(uint128(_price)));
-
-        require(_owns(msg.sender, _tokenId));
-        _escrow(_tokenId);
+        // called from the main contract
+        require(msg.sender == address(nonFungibleContract));
+        require(_owns(_seller, _tokenId));
+        _escrow(_seller, _tokenId);
         Sale memory sale = Sale(
-            msg.sender,
+            _seller,
             uint128(_price),
             uint64(now)
         );
