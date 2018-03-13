@@ -78,6 +78,10 @@ contract LicenseManager is ERC721Token, Ownable {
         licenseSale = candidateContract;
     }
 
+    function getLicenseSaleAddress() external returns(address) {
+        return licenseSale;
+    }
+
     /**
     * @dev Function to create a new license and add it to the owner
     * @param _licenseId The id of license to mint.

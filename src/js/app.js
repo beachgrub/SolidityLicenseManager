@@ -21,7 +21,8 @@ App = {
         licenseTemplate.find('.btn-claim').attr('data-id', licenseData[i].id);
         licenseTemplate.find('.btn-setrate').attr('data-id', licenseData[i].id);
         licenseTemplate.find('.btn-setsale').attr('data-id', licenseData[i].id);
-
+        licenseTemplate.find('.btn-purchase').attr('data-id', licenseData[i].id);
+        licenseTemplate.find('.btn-cancelsale').attr('data-id', licenseData[i].id);
         licenseRow.append(licenseTemplate.html());
       }
     });
@@ -58,6 +59,7 @@ App = {
         App.markLicenses(licenseId);
       }
       App.handleGetBalance();
+   //   App.setSaleAddress();
     });
 
     $.getJSON('LicenseSale.json', function(data) {
@@ -80,6 +82,8 @@ App = {
     $(document).on('click', '.btn-setrate', App.handleSetRate);
     $(document).on('click', '.btn-setsale', App.handleSetSale);
     $(document).on('click', '.btn-getbalance', App.handleWithdrawBalance);
+    $(document).on('click', '.btn-cancelsale', App.handleCancelSale);
+    $(document).on('click', '.btn-purchase', App.handlePurchase);
   },
 
   markLicenses: function(licenseId, account) {
@@ -89,7 +93,10 @@ App = {
     $('.panel-license').eq(licenseId).find('.panel-licbutton').hide();          
     $('.panel-license').eq(licenseId).find('.panel-rate').hide();          
     $('.panel-license').eq(licenseId).find('.panel-sale').hide();          
+    $('.panel-license').eq(licenseId).find('.panel-cancelsale').hide();          
+    $('.panel-license').eq(licenseId).find('.panel-saleprice').hide();          
     $('.panel-license').eq(licenseId).find('.panel-avail').hide();
+    $('.panel-license').eq(licenseId).find('.panel-purchase').hide();
     $('.panel-license').eq(licenseId).find('.panel-notavail').show();
 
     web3.eth.getAccounts(function(error, accounts) {
@@ -138,6 +145,7 @@ App = {
             App.handleUpdateLicense(licenseId);
           }
           App.handleGetRate(licenseId);
+          App.handleGetSale(licenseId);
         }).catch(function(err) {
           console.log(err.message);
       });
@@ -404,7 +412,60 @@ App = {
     });
   },
   
-  handleGetSale: function(event) {
+  handleCancelSale: function(event) {
+    event.preventDefault();
+    var licenseId = parseInt($(event.target).data('id'));
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+
+      App.contracts.LicenseSale.deployed().then(function(instance) {
+        licenseInstance = instance;
+    
+        return licenseInstance.cancelSale(licenseId, {from: account});
+      }).then(function(result) {
+        console.log("cancelSale success "+result);
+
+      }).catch(function(err) {
+        console.log("cancelSale error: "+ err.message);
+      });
+    });
+  },
+
+  handlePurchase: function(event) {
+    event.preventDefault();
+    var licenseId = parseInt($(event.target).data('id'));
+    var cost = $('.panel-license').eq(licenseId).find('.saleprice').text();
+    cost = web3.toWei(cost,"ether");
+    console.log("Purchase cost ="+cost);
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+
+      var account = accounts[0];
+
+      App.contracts.LicenseSale.deployed().then(function(instance) {
+        licenseInstance = instance;
+    
+        return licenseInstance.buy(licenseId, {value: cost, from: account});
+      }).then(function(result) {
+        console.log("handlePurchase success "+result);
+
+      }).catch(function(err) {
+        console.log("handlePurchase error: "+ err.message);
+      });
+    });
+  },
+    
+  handleGetSale: function(licenseId) {
     var licenseInstance;
 
     console.log("handleSale");
@@ -417,10 +478,50 @@ App = {
 
       App.contracts.LicenseSale.deployed().then(function(instance) {
         licenseInstance = instance;
-        return licenseInstance.getSale.call(0);
- //       return licenseInstance.getTokenContract.call();
+        return licenseInstance.getSale.call(licenseId);
+ //       return licenseInstance.getLicenseSaleAddress.call();
       }).then(function(result) {
-        console.log("getSale " + result);
+        if (result[0] != "0x") { // for sale
+          $('.panel-license').eq(licenseId).find('.owner').text(result[0].substring(0,10) + "...FOR SALE");          
+          $('.panel-license').eq(licenseId).find('.panel-saleprice').show();  
+          var ethRate = web3.fromWei(result[1],"ether").toFixed(4);
+          $('.panel-license').eq(licenseId).find('.saleprice').text(ethRate);
+          if (accounts[0] === result[0]) {
+            $('.panel-license').eq(licenseId).find('.panel-cancelsale').show();          
+          } else {
+            $('.panel-license').eq(licenseId).find('.panel-purchase').show();          
+          }
+        }
+
+        console.log("getSale " + result[0]);
+      }).catch(function(err) {
+        console.log("GetSale error: "+ err.message);
+      });
+    });
+  },
+
+  setSaleAddress: function(event) {
+    var licenseInstance;
+
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+      var saleAddress = 0;
+      var account = accounts[0];
+
+      App.contracts.LicenseSale.deployed().then(function(instance) {
+        licenseInstance = instance;
+        saleAddress = licenseInstance.address;
+      }).then(function(result) {
+        App.contracts.LicenseManager.deployed().then(function(instance) {
+          licenseInstance = instance;
+          return licenseInstance.setLicenseSaleAddress(saleAddress);
+        }).then(function(result) {
+          console.log("SetSaleAddress success");
+        }).catch(function(err) {
+          console.log("SetSaleAddress error: "+ err.message);
+        });
       }).catch(function(err) {
         console.log("GetSale error: "+ err.message);
       });
