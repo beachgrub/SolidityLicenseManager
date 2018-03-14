@@ -46,8 +46,13 @@ It is also based on the standard zeppelin-solidity libraries (https://openzeppel
 ### Running tests
 
 To run all of the smart contract tests use following command in your console:
-IN PROGRESS - NOT CURRENTLY functional
 
+(Depends on Chai http://www.chaijs.com/ as well as chai-bignumber and chai-as-promised)
+
+    npm install chai
+    npm install chai-bignumber
+    npm install chai-as-promised
+    
     truffle test 
 
 ## Contributions
